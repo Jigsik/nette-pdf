@@ -40,6 +40,9 @@ class DocumentFactory
 	/** @var Application */
 	private $application;
 
+	/** @var array */
+	private $customFonts;
+
 
 
 	/**
@@ -54,15 +57,7 @@ class DocumentFactory
 		$this->defaults = array_replace_recursive($this->defaults, $defaults);
 		$this->templateFactory = $templateFactory;
 
-		if ($customFonts) {
-			if (defined('_MPDF_SYSTEM_TTFONTS_CONFIG')) {
-				throw new LogicException("Constant _MPDF_SYSTEM_TTFONTS_CONFIG can't be defined to allow dotblue/nette-pdf to configure fonts.");
-			}
-
-			define('_MPDF_SYSTEM_TTFONTS_CONFIG', __DIR__ . '/config_fonts.php');
-			global $__dotblueNettePdfFonts;
-			$__dotblueNettePdfFonts = $customFonts;
-		}
+		$this->customFonts = $customFonts;
 	}
 
 
@@ -127,8 +122,10 @@ class DocumentFactory
 			'margin_left' => $setup['margin']['left'],
 			'margin_right' => $setup['margin']['right'],
 			'margin_top' => $setup['margin']['top'],
-			'margin_bottom'=> $setup['margin']['bottom']
+			'margin_bottom'=> $setup['margin']['bottom'],
+            'fontdata' => $this->customFonts
 		]);
+
 		$mpdf->showImageErrors = TRUE;
 		$mpdf->img_dpi = $setup['img_dpi'];
 		return $mpdf;
