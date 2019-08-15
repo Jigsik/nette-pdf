@@ -3,6 +3,8 @@
 namespace DotBlue\Mpdf;
 
 use LogicException;
+use Mpdf\Config\ConfigVariables;
+use Mpdf\Config\FontVariables;
 use Mpdf\Mpdf;
 use Nette;
 use Nette\Application\Application;
@@ -31,6 +33,15 @@ class DocumentFactory
 		],
 	];
 
+	/** @var array */
+	private $customFonts;
+
+	/** @var array */
+	private $customFontsDirs;
+
+	/** @var string|null */
+	private $defaultFont;
+
 	/** @var array[] */
 	private $themes = [];
 
@@ -40,9 +51,6 @@ class DocumentFactory
 	/** @var Application */
 	private $application;
 
-	/** @var array */
-	private $customFonts;
-
 
 
 	/**
@@ -51,13 +59,15 @@ class DocumentFactory
 	 * @param  array
 	 * @param  ITemplateFactory
 	 */
-	public function __construct($templateDir, array $defaults, array $customFonts, ITemplateFactory $templateFactory)
+	public function __construct($templateDir, array $defaults, array $customFontsDirs, array $customFonts, ?string $defaultFont, ITemplateFactory $templateFactory)
 	{
 		$this->templateDir = rtrim($templateDir, DIRECTORY_SEPARATOR);
 		$this->defaults = array_replace_recursive($this->defaults, $defaults);
 		$this->templateFactory = $templateFactory;
 
 		$this->customFonts = $customFonts;
+		$this->customFontsDirs = $customFontsDirs;
+		$this->defaultFont = $defaultFont;
 	}
 
 
@@ -117,15 +127,22 @@ class DocumentFactory
 
 		$setup = array_replace_recursive($this->themes[$theme], $setup);
 
+		$defaultConfig = (new ConfigVariables())->getDefaults();
+		$fontDirs = $defaultConfig['fontDir'];
+
+		$defaultFontConfig = (new FontVariables())->getDefaults();
+		$fontData = $defaultFontConfig['fontdata'];
+
 		$mpdf = new Mpdf([
+			'fontDir' => array_merge($fontDirs, $this->customFontsDirs),
+			'fontdata' => $fontData + $this->customFonts,
+			'default_font' => $this->defaultFont,
 			'format' => $setup['size'],
 			'margin_left' => $setup['margin']['left'],
 			'margin_right' => $setup['margin']['right'],
 			'margin_top' => $setup['margin']['top'],
-			'margin_bottom'=> $setup['margin']['bottom'],
-            'fontdata' => $this->customFonts
+			'margin_bottom'=> $setup['margin']['bottom']
 		]);
-
 		$mpdf->showImageErrors = TRUE;
 		$mpdf->img_dpi = $setup['img_dpi'];
 		return $mpdf;

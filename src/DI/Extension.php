@@ -11,7 +11,9 @@ class Extension extends DI\CompilerExtension
 
 	/** @var array */
 	private $defaults = [
+		'fontsDirs' => [],
 		'fonts' => [],
+		'defaultFont' => null,
 		'themes' => [],
 	];
 
@@ -28,8 +30,14 @@ class Extension extends DI\CompilerExtension
 		$themes = $config['themes'];
 		unset($config['themes']);
 
-		$fonts = $this->configureFonts($config['fonts']);
+		$fontsDirs = $config['fontsDirs'];
+		unset($config['fontsDirs']);
+
+		$fonts = $config['fonts'];
 		unset($config['fonts']);
+
+		$defaultFont = $config['defaultFont'];
+		unset($config['defaultFont']);
 
 		if (!$container->getByType('DotBlue\Mpdf\ITemplateFactory')) {
 			$container->addDefinition($this->prefix('templateFactory'))
@@ -40,7 +48,9 @@ class Extension extends DI\CompilerExtension
 			->setClass('DotBlue\Mpdf\DocumentFactory', [
 				$templatesDir,
 				$config,
-				$fonts
+				$fontsDirs,
+				$fonts,
+				$defaultFont
 			]);
 
 		foreach ($themes as $name => $setup) {
